@@ -3,8 +3,8 @@
 #include <cstdint>
 
 
-static const int screenWidth = 400 % 2560;
-static const int screenHeight = 400 % 1664;
+static const int screenWidth = 500;
+static const int screenHeight = 500;
 static const int gridWidth = 20;    
 static const int speed = 0;    
 static const int fps= 60;    
@@ -53,23 +53,26 @@ void drawGrid()
 int main(void)
 {
 
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+    InitWindow(screenWidth, screenHeight, "Snake");
 
     SetTargetFPS(fps);               // Set our game to run at 60 frames-per-second
-    int tick = 0;
-    int tickRate = 8; // more == faster
 
+    bool paused = 0; 
+    bool add = 0; 
+    
+    int tick = 0;
+    int tickRate = 10; // more == faster
     int nLen = 1;
+    int eaten = 1;
 
     Snake snakeLength[256] = {0};    
 
-    
+
     Vector2 applePos = getRandomVec();
     Color appleColor= RED;
 
 
     int dir = 1;
-    // 1 -> left 2 -> right 3-> down 4->up
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         BeginDrawing();
@@ -78,90 +81,124 @@ int main(void)
         //game logic 
         {
             int key = GetKeyPressed();
-            switch(key)
+            if(paused == false)
             {
-                case KEY_W:
-                    {
-                        snakeLength[0].snakeVelocity = {0,-gridWidth + speed};
-                    }break;
-                case KEY_S:
-                    {
-                        snakeLength[0].snakeVelocity = {0,+gridWidth - speed};
-                    }break;
-                case KEY_D:
-                    {
-                        snakeLength[0].snakeVelocity = {+gridWidth - speed,0};
-                    }break;
-                case KEY_A:
-                    {
-                        snakeLength[0].snakeVelocity = {-gridWidth + speed,0};
-                    }break;
-                case KEY_ESCAPE:
-                    {
-                        break;
-                    }break;
-            }
 
-            if(tick == fps/tickRate)
-            { 
-                Vector2 prevPos;
+                switch(key)
+                {
+                    case KEY_W:
+                        {
+                            if(snakeLength[0].snakeVelocity.y == 0)
+                            {
+                                snakeLength[0].snakeVelocity = {0,-gridWidth + speed};
+                            }
+                        }break;
+                    case KEY_S:
+                        {
+                            if(snakeLength[0].snakeVelocity.y == 0)
+                            {
+                                snakeLength[0].snakeVelocity = {0,+gridWidth - speed};
+                            }
+                        }break;
+                    case KEY_D:
+                        {
+                            if(snakeLength[0].snakeVelocity.x == 0)
+                            {
+                                snakeLength[0].snakeVelocity = {+gridWidth - speed,0};
+                            }
+                        }break;
+                    case KEY_A:
+                        {
+                            if(snakeLength[0].snakeVelocity.x == 0)
+                            {
+                                snakeLength[0].snakeVelocity = {-gridWidth + speed,0};
+                            }
+                        }break;
+                }
+                if(tick == fps/tickRate)
+                { 
+                    Vector2 prevPos;
+                    for(int i = 0 ; i < nLen ; i++)
+                    {
+                        if(i == 0)
+                        {
+
+                            prevPos = snakeLength[0].snakePos;
+                            snakeLength[0].snakePos.x += snakeLength[0].snakeVelocity.x;
+                            snakeLength[0].snakePos.y += snakeLength[0].snakeVelocity.y;
+
+                            if(snakeLength[0].snakePos.x >= screenWidth)
+                            {
+                                snakeLength[0].snakePos.x = 0;
+                            }
+                            else if(snakeLength[0].snakePos.x < 0)
+                            {
+                                snakeLength[0].snakePos.x = screenWidth - gridWidth;
+                            }
+                            if(snakeLength[0].snakePos.y >= screenHeight)
+                            {
+                                snakeLength[0].snakePos.y = 0;
+                            }
+                            else if(snakeLength[0].snakePos.y < 0)
+                            {
+                                snakeLength[0].snakePos.y = screenHeight - gridWidth;
+                            }
+                        }
+                        else
+                        {
+                            std::swap(snakeLength[i].snakePos,prevPos);
+                        }
+
+                        if(add)
+                        {
+                            nLen++;
+                            add = 0;
+                        }
+                        tick = 0;
+                    }
+                }
+
+                for(int i = 1 ; i < nLen ; i++)
+                {
+                    if(snakeLength[i].snakePos.x == snakeLength[0].snakePos.x && snakeLength[i].snakePos.y == snakeLength[0].snakePos.y)
+                    {
+                        paused = 1;
+                    }
+                }
+
+                if(snakeLength[0].snakePos.x == applePos.x && snakeLength[0].snakePos.y == applePos.y)
+                {
+                    add = 1;
+                    eaten++;
+                    applePos = getRandomVec();
+                    if(tickRate != fps && eaten % 5 == 0)
+                    {
+                        tickRate++;
+                    }
+                }
+
+
+
                 for(int i = 0 ; i < nLen ; i++)
                 {
-                    if(i == 0)
-                    {
-
-                        prevPos = snakeLength[0].snakePos;
-                        snakeLength[0].snakePos.x += snakeLength[0].snakeVelocity.x;
-                        snakeLength[0].snakePos.y += snakeLength[0].snakeVelocity.y;
-
-                        if(snakeLength[0].snakePos.x >= screenWidth)
-                        {
-                            snakeLength[0].snakePos.x = 0;
-                        }
-                        else if(snakeLength[0].snakePos.x < 0)
-                        {
-                            snakeLength[0].snakePos.x = screenWidth - gridWidth;
-                        }
-                        if(snakeLength[0].snakePos.y >= screenHeight)
-                        {
-                            snakeLength[0].snakePos.y = 0;
-                        }
-                        else if(snakeLength[0].snakePos.y < 0)
-                        {
-                            snakeLength[0].snakePos.y = screenHeight - gridWidth;
-                        }
-                    }
-                    else
-                    {
-                        std::swap(snakeLength[i].snakePos,prevPos);
-                    }
-                    tick = 0;
+                    //printf("%d %f %f\n",i,snakeLength[i].snakePos.x , snakeLength[i].snakePos.y);
+                    // uint8_t r = GetRandomValue(0,255);
+                    // uint8_t g = GetRandomValue(0,255);
+                    // uint8_t b = GetRandomValue(0,255);
+                    // uint8_t a = GetRandomValue(0,255);
+                    // 
+                    // int random = 0;
+                    DrawRectangleV(snakeLength[i].snakePos,snakeLength[i].snakeSize,snakeLength[i].snakeColor);
                 }
+                DrawRectangleV(applePos,snakeLength[0].snakeSize,appleColor);
+                tick++;
             }
-            for(int i = 0 ; i < nLen ; i++)
+            else
             {
-                //printf("%d %f %f\n",i,snakeLength[i].snakePos.x , snakeLength[i].snakePos.y);
-                uint8_t r = GetRandomValue(0,255);
-                uint8_t g = GetRandomValue(0,255);
-                uint8_t b = GetRandomValue(0,255);
-                uint8_t a = GetRandomValue(0,255);
-                
-                int random = 0;
-                
-                random = random 
- 
-
-                DrawRectangleV(snakeLength[i].snakePos,snakeLength[i].snakeSize,random);
+                ClearBackground(BLACK);
+                DrawText("GAMEOVER", 80, 80, 40, RED);
             }
-            if(snakeLength[0].snakePos.x == applePos.x && snakeLength[0].snakePos.y == applePos.y)
-            {
-                nLen++;
-                applePos = getRandomVec();
-            }
-            DrawRectangleV(applePos,snakeLength[0].snakeSize,appleColor);
-            tick++;
-        }
-        //game logic 
+        }    
 
 
         EndDrawing();
